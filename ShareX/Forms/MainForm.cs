@@ -44,6 +44,7 @@ namespace ShareX
         public bool IsReady { get; private set; }
 
         private bool forceClose, trayMenuSaveSettings = true;
+        private bool menuOpen = false;
         private UploadInfoManager uim;
         private ToolStripDropDownItem tsmiImageFileUploaders, tsmiTrayImageFileUploaders, tsmiTextFileUploaders, tsmiTrayTextFileUploaders;
 
@@ -182,6 +183,37 @@ namespace ShareX
             })
             {
                 dropDownItem.DisableMenuCloseOnClick();
+            }
+
+            foreach (ToolStripDropDownButton dropDownButton in new ToolStripDropDownButton[]
+            {
+                tsddbCapture, tsddbUpload, tsddbWorkflows, tsddbTools,
+                tsddbAfterCaptureTasks, tsddbAfterUploadTasks, tsddbDestinations,
+                tsddbDebug
+            })
+            {
+                dropDownButton.MouseEnter += (sender, e) =>
+                {
+                    ToolStripDropDownButton tsddbSender = (ToolStripDropDownButton)sender;
+                    if (menuOpen)
+                    {
+                        tsddbSender.Select();
+                        tsddbSender.ShowDropDown();
+                    };
+                };
+                dropDownButton.DropDownOpened += (sender, e) =>
+                {
+                    menuOpen = true;
+                };
+                dropDownButton.DropDown.Closed += (sender, e) =>
+                {
+                    if (menuOpen && (e.CloseReason == ToolStripDropDownCloseReason.AppClicked
+                    || e.CloseReason == ToolStripDropDownCloseReason.CloseCalled
+                    || e.CloseReason == ToolStripDropDownCloseReason.Keyboard))
+                    {
+                        menuOpen = false;
+                    }
+                };
             }
 
             ExportImportControl.UploadRequested += json => UploadManager.UploadText(json);
@@ -2361,6 +2393,11 @@ namespace ShareX
 
             UpdateTaskViewMode();
             UpdateContextMenu();
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+
         }
 
         private void tsmiImagePreviewHide_Click(object sender, EventArgs e)
